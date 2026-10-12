@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hot tub math - calculators</title>
+<style>
+  :root { --accent: #a3623f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, 'Times New Roman', serif; background: #faf6f2; color: #2e2925; line-height: 1.55; }
+  main { max-width: 1100px; margin: 0 auto; padding: 40px 20px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; color: var(--accent); }
+  .lede { margin: 0 0 28px; max-width: 640px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  section { background: #fff; border: 1px solid #e9d9cb; border-radius: 8px; padding: 20px 22px; }
+  h2 { font-size: 1.15rem; margin: 0 0 6px; }
+  .hint { font-size: 0.9rem; color: #8a6248; margin: 0 0 14px; }
+  label { display: block; font-size: 0.9rem; margin: 10px 0 3px; }
+  input { width: 100%; padding: 8px 10px; font-size: 1rem; border: 1px solid #d8c0ae; border-radius: 5px; font-family: inherit; }
+  button { margin-top: 16px; width: 100%; padding: 11px; background: var(--accent); color: #fff; border: 0; border-radius: 6px; font-size: 1rem; cursor: pointer; font-family: inherit; }
+  button:hover { filter: brightness(1.08); }
+  .out { margin-top: 14px; font-size: 1rem; min-height: 1.4em; }
+  .out.err { color: #a32222; }
+  footer { max-width: 1100px; margin: 0 auto; padding: 0 20px 40px; font-size: 0.85rem; color: #b39a8a; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hot tub math</h1>
+  <p class="lede">When the water is ready, what the soaks cost, and what the cover is worth. Exact arithmetic, every borrowed number labeled.</p>
+  <div class="grid">
+    <section>
+      <h2>Heat plan</h2>
+      <p class="hint">Degrees become hours to wait.</p>
+      <label for="h-v">Water volume (liters)</label>
+      <input id="h-v" type="number" value="1500" min="0" step="100">
+      <label for="h-kw">Heater power (kW)</label>
+      <input id="h-kw" type="number" value="3" min="0" step="0.5">
+      <label for="h-s">Start temperature (C)</label>
+      <input id="h-s" type="number" value="15" min="0" step="1">
+      <label for="h-t">Target temperature (C)</label>
+      <input id="h-t" type="number" value="38" min="0" step="1">
+      <button id="h-go">Time the heat-up</button>
+      <div class="out" id="h-out"></div>
+    </section>
+    <section>
+      <h2>Session plan</h2>
+      <p class="hint">Soaks priced for the year.</p>
+      <label for="s-kwh">kWh per heat-up</label>
+      <input id="s-kwh" type="number" value="40" min="0" step="1">
+      <label for="s-n">Soaks per week</label>
+      <input id="s-n" type="number" value="3" min="0" step="1">
+      <label for="s-p">Electricity price (dollars per kWh)</label>
+      <input id="s-p" type="number" value="0.15" min="0" step="0.01">
+      <button id="s-go">Price the soaks</button>
+      <div class="out" id="s-out"></div>
+    </section>
+    <section>
+      <h2>Cover plan</h2>
+      <p class="hint">The cover's yearly savings.</p>
+      <label for="c-u">Standby loss uncovered (W)</label>
+      <input id="c-u" type="number" value="300" min="0" step="10">
+      <label for="c-c">Standby loss covered (W)</label>
+      <input id="c-c" type="number" value="150" min="0" step="10">
+      <label for="c-h">Hours per day</label>
+      <input id="c-h" type="number" value="24" min="0" step="1">
+      <label for="c-d">Days per year</label>
+      <input id="c-d" type="number" value="365" min="0" step="5">
+      <label for="c-p">Electricity price (dollars per kWh)</label>
+      <input id="c-p" type="number" value="0.15" min="0" step="0.01">
+      <button id="c-go">Value the cover</button>
+      <div class="out" id="c-out"></div>
+    </section>
+  </div>
+</main>
+<footer>Built by the app factory. <a href="index.html">About</a> &middot; <a href="https://github.com/iLanis-agent/hottubmath">Source</a></footer>
+<script src="engine.js"></script>
+<script>
+function num(id){ return parseFloat(document.getElementById(id).value); }
+function show(id, r, render){
+  var el = document.getElementById(id);
+  if (r.error) { el.textContent = r.error; el.classList.add('err'); }
+  else { el.textContent = render(r); el.classList.remove('err'); }
+}
+document.getElementById('h-go').addEventListener('click', function(){
+  var a=[num('h-v'),num('h-kw'),num('h-s'),num('h-t')];
+  show('h-out', HottubMath.heatPlan.apply(null,a), function(r){ return HottubMath.renderHeat.apply(null,[r].concat(a)); });
+});
+document.getElementById('s-go').addEventListener('click', function(){
+  var a=[num('s-kwh'),num('s-n'),num('s-p')];
+  show('s-out', HottubMath.sessionPlan.apply(null,a), function(r){ return HottubMath.renderSession.apply(null,[r].concat(a)); });
+});
+document.getElementById('c-go').addEventListener('click', function(){
+  var a=[num('c-u'),num('c-c'),num('c-h'),num('c-d'),num('c-p')];
+  show('c-out', HottubMath.coverPlan.apply(null,a), function(r){ return HottubMath.renderCover.apply(null,[r].concat(a)); });
+});
+</script>
+</body>
+</html>
